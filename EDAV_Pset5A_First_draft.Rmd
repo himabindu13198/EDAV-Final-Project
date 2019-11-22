@@ -1,0 +1,214 @@
+---
+title: "EDAV_PSet5A"
+output: html_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)  
+```
+
+## R Markdown
+
+```{r cars}
+
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+library(maps)
+library(GGally)
+library(RColorBrewer)
+library(parcoords)
+
+```
+The dataset has 4 tables corresponding to inter-state wars, intra-state wars, non state wars and extra state wars. 
+Many wars transformed to other wars that took place later on. We found that 12 civil intra state wars transformed to inter state wars, 3 inter state wars transformed to extra state wars and 2 intra state wars transformed to extra state wars. We were able to find these transformed wars and store them as shown below:
+
+
+
+```{r}
+inter_state=read.csv('/home/hima/Downloads/data_raw/Inner-state Wars/Inter-StateWarData_v4.0.csv')
+intra_state=read.csv('/home/hima/Downloads/data_raw/Intra-state Wars/Intra-StateWarData_v4.1.csv')
+Extra_state=read.csv('/home/hima/Downloads/data_raw/Extra-state Wars/Extra-StateWarData_v4.0.csv')
+```
+
+Intra state wars are further categorised into 3 types as follows:
+```{r}
+Civil_intra_state=intra_state%>%filter(WarType==4|WarType==5)
+Regional_internal_intra_state=intra_state%>%filter(WarType==6)
+Intercommunal_intra_state=intra_state%>%filter(WarType==7)
+```
+
+```{r}
+#12 Civil_inta_state wars transformed to inter_state wars
+intra_to_inter_wars=vector('numeric',length=0)
+for (val in unique(Civil_intra_state%>%select(TransTo)%>%filter(TransTo!=-8))$TransTo ) {
+  if(val %in%  unique(inter_state$WarNum))  intra_to_inter_wars=append(intra_to_inter_wars, val, after = length(intra_to_inter_wars))
+    }
+
+#3 inter_state wars transformed to Extra_state wars
+inter_to_extra_wars=vector('numeric',length=0)
+for (val in unique(inter_state%>%select(TransTo)%>%filter(TransTo!=-8))$TransTo)  {
+  if(val %in% unique(Extra_state$WarNum) )  {inter_to_extra_wars=append(inter_to_extra_wars, val, after = length(inter_to_extra_wars))
+}}
+
+#2 intra_state wars transformed to Extra_state wars
+intra_to_extra_wars=vector('numeric',length=0)
+for (val in unique(Civil_intra_state%>%select(TransTo)%>%filter(TransTo!=-8))$TransTo)  {
+  if(val %in% unique(Extra_state$WarNum) )  {intra_to_extra_wars=append(intra_to_extra_wars, val, after = length(intra_to_extra_wars))
+  }}
+
+```
+
+We started exploring inter state wars and focused on the world war 1 and world war 2 as a starting point.
+
+Below is a world map plot of the number of battle deaths in thousands seen during inter state wars from 1816-2007. The color scheme highlights the magnitude of deaths with ease of comparison.
+
+```{r}
+df1=inter_state%>%group_by(StateName)%>%summarise(total_deaths=sum(BatDeath))
+world <- map_data("world")
+df1 <- df1 %>%
+  ## Recode certain entries
+  mutate(StateName = recode(str_trim(StateName), "United States of America" = "USA",
+                            "United Kingdom" = "UK","China (PRC)"="China","Taiwan (ROC)"="Taiwan","Yemen Arab Republic"="Yemen"))
+df1$total_deaths=df1$total_deaths/1000
+```
+
+```{r}
+ggplot(df1, aes(map_id = StateName)) + 
+  geom_map(aes(fill = total_deaths), map = world) +
+  expand_limits(x = world$long, y = world$lat) +
+  borders(database = "world", regions = ".", fill = NA,
+          colour = "grey50", xlim = NULL, ylim = NULL)+
+scale_fill_distiller(type = "seq", palette = "Greens", direction = -1,limits = c(min(df1$total_deaths), max(df1$total_deaths)), na.value = "white", name = "Number of deaths in thousands") +
+  coord_fixed(1.3) +
+  labs(
+    title = "Deaths by countries Inter-state wars 1816-2007" ,x=" ",y=" "
+  )
+
+```
+
+World War 1
+
+```{r}
+#world_war1:: Years: 1914-1918
+world_war1=inter_state%>%filter(WarName=='World War I')
+world_war1$StateName=as.character(world_war1$StateName)
+```
+
+On plotting a bar graph of the countries that were involved in the whole period of world war 1 (1914 -1918), we attempted to see which countries had maximum number of battle deaths. Following is the bar graph that plots the number of deaths corresponding to each country that was involved in World War 1.
+
+```{r}
+ggplot(world_war1, aes(x=reorder(StateName,BatDeath),y=BatDeath)) +
+  geom_bar(color = "grey50", fill = "lightblue",stat='identity') +
+  coord_flip()+
+  xlab("Countries") +
+  ggtitle("World War 1 number of deaths by countries")+
+  theme(plot.title = element_text(hjust = 0.5, size=10))
+```
+
+```{r}
+#maps
+world <- map_data("world")
+world_war1 <- world_war1 %>%
+  ## Recode certain entries
+  mutate(StateName = recode(str_trim(StateName), "United States of America" = "USA",
+                            "United Kingdom" = "UK"))
+```
+
+```{r}
+world_war1['start_date'] <- as.Date(with(world_war1, paste(StartYear1, StartMonth1, StartDay1,sep="-")), "%Y-%m-%d")
+world_war1['end_date'] <- as.Date(with(world_war1, paste(EndYear1, EndMonth1, EndDay1,sep="-")), "%Y-%m-%d")
+world_war1['number_of_days']=world_war1['end_date']-world_war1['start_date']
+```
+
+Below is a plot of the number of deaths of various countries during World War 1:
+
+```{r}
+ggplot(world_war1, aes(map_id = StateName)) + 
+  geom_map(aes(fill = BatDeath), map = world) +
+  expand_limits(x = world$long, y = world$lat) +
+  borders(database = "world", regions = ".", fill = NA,
+          colour = "grey50", xlim = NULL, ylim = NULL)+
+  scale_fill_distiller(type = "seq", palette = "Greens", direction = 1, na.value = "white", name = "Number of deaths") +
+  coord_fixed(1.3) +
+  labs(
+    title = "World war 1 Deaths by countries " ,x=" ",y=" "
+  )
+```
+
+Below is a plot of the number of days that various countries fought during World War 1:
+
+```{r}
+world_war1$number_of_days <- as.numeric(world_war1$number_of_days )
+ggplot(world_war1, aes(map_id = StateName)) + 
+  geom_map(aes(fill = number_of_days), map = world) +
+  expand_limits(x = world$long, y = world$lat) +
+  borders(database = "world", regions = ".", fill = NA,
+          colour = "grey50", xlim = NULL, ylim = NULL)+
+  scale_fill_distiller(type = "seq", palette = "Greens", direction = -1, na.value = "white", name = "Number of days") +
+  coord_fixed(1.3) +
+  labs(
+    title = "World war 1 by num_of_days " ,x=" ",y=" "
+  )
+
+```
+We tried to investigate whether there was some correlation between the number of days a country fought and the number of deaths for both sides of the war. There was no correlation between number of deaths and number of days spent on battlefield. There were instances where number of days in battle was high but number of deaths was low and vice versa for both sides. So, there may be other factors that lead to more (or less) number of deaths (military equipments or training, advancement in technology, etc) which we intend to further investigate. Below is the interactive parallel coordinate plot.
+```{r}
+ww1 <- subset(world_war1, select = c(5,24, 28,6))
+ww1$BatDeath=as.numeric(ww1$BatDeath)
+ww1$number_of_days=as.numeric(ww1$number_of_days)
+ww1$Side <- as.character(ww1$Side)
+# ww1$Side <- as.factor(ww1$Side) 
+ww1$Side[ww1$Side == "1"] <- "A"
+ww1$Side[ww1$Side == "2"] <- "B"
+
+
+# theme_set(theme_grey(14))
+
+parcoords(ww1 ,brushMode = '1D-axes', reorderable = TRUE, withD3 = TRUE, color = list(
+  colorScale = "scaleOrdinal",
+  colorBy = "Side",
+  colorSheme = "schemeCategory10"
+), rownames = FALSE) 
+
+```
+
+World War 2
+```{r}
+#world_war2:: Years: 1939-1945
+world_war2=inter_state%>%filter(WarName=='World War II')
+world_war2$StateName=as.character(world_war2$StateName)
+#maps
+world <- map_data("world")
+world_war2 <- world_war2 %>%
+  ## Recode certain entries
+  mutate(StateName = recode(str_trim(StateName), "United States of America" = "USA",
+                            "United Kingdom" = "UK"))
+
+```
+
+Below is a bar graph of the number of deaths of various countries during World War 2:
+
+```{r}
+ggplot(world_war2, aes(x=reorder(StateName,BatDeath),y=BatDeath)) +
+  geom_bar(color = "grey50", fill = "lightblue",stat='identity') +
+  coord_flip()+
+  labs(
+    title = "WorldWar2 number of deaths by countries " ,x=" Countries",y=" Battle deaths"
+  )
+```
+Below is a plot of the number of deaths of various countries during World War 2:
+
+```{r}
+ggplot(world_war2, aes(map_id = StateName)) + 
+  geom_map(aes(fill = BatDeath), map = world) +
+  expand_limits(x = world$long, y = world$lat) +
+  borders(database = "world", regions = ".", fill = NA,
+          colour = "grey50", xlim = NULL, ylim = NULL)+
+  scale_fill_distiller(type = "seq", palette = "Greens", direction = -1, na.value = "white", name = "number of deaths") +
+  coord_fixed(1.3) +
+  labs(
+    title = "World war 2 Deaths by countries " ,x=" ",y=" "
+  )
+
+```
+
