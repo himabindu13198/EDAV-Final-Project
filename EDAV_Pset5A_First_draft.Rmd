@@ -1,7 +1,7 @@
 ---
-author: Priyanka Lahoti, Hima Bindu Bhardwaj, Jasmine Bao, Yingnan Wu (Group 10)
 title: "EDAV Fall 2019 PSet 5, part A"
 output: html_document
+author: Priyanka Lahoti, Hima Bindu Bhardwaj, Jasmine Bao, Yingnan Wu (Group 10)
 ---
 
 
@@ -108,7 +108,7 @@ extra_state <- read.csv('Extra-StateWarData_v4.0.csv')
 non_state <- read.csv('Non-StateWarData_v4.0.csv')
 ```
 
-Intra state wars are further categorised into 3 types as follows:
+Intra state wars are further categorized into 3 types as follows:
 
 
 ```{r}
@@ -118,7 +118,7 @@ Intercommunal_intra_state <-intra_state %>% filter(WarType==7)
 ```
 
 
-We first merged all four datasets to answer what types of wars happened most frequently. Based on *Figure 1*, we found that among all wat types, there are most inter-state wars (Type 1), civil wars for central control (Type 4) and civil wars for local issues (Type 5), which are expected types that happened in history.  
+We first merged all four datasets to answer what types of wars happened most frequently. Based on *Figure 1*, we found that among all war types, there are most inter-state wars (Type 1), civil wars for central control (Type 4) and civil wars for local issues (Type 5), which are expected types that happened in history.  
 
 
 ```{r}
@@ -291,7 +291,7 @@ ggplot(world_war1, aes(map_id = StateName)) +
 ```
 
 
-We tried to investigate whether there was some correlation between the number of days a country fought and the number of deaths for both sides of the war. There was no correlation between number of deaths and number of days spent on battlefield. There were instances where number of days in battle was high but number of deaths was low and vice versa for both sides. So, there may be other factors that lead to more (or less) number of deaths (military equipments or training, advancement in technology, etc) which we intend to further investigate. Below is the interactive parallel coordinate plot.
+We tried to investigate whether there was some correlation between the number of days a country fought and the number of deaths for both sides of the war. There was no correlation between number of deaths and number of days spent on battlefield. There were instances where number of days in battle was high but number of deaths was low and vice versa for both sides. So, there may be other factors that lead to more (or less) number of deaths (military equipment or training, advancement in technology, etc) which we intend to further investigate. Below is the interactive parallel coordinate plot.
 
 ```{r}
 ww1 <- subset(world_war1, select = c(5,24, 28,6))
