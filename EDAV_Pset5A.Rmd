@@ -132,7 +132,7 @@ ggplot(total, aes(as.factor(WarType))) +
   geom_bar(color = "grey50", fill = "lightblue") + 
   coord_flip() +
   xlab("War Type") +
-  ggtitle("Figure 1.1: Bar chart of War Types (1816-2007)") + 
+  ggtitle("Figure 1: Bar chart of War Types (1816-2007)") + 
   theme(plot.title = element_text(hjust = 0.5, size=12)) + 
   scale_x_discrete(labels=c("Type 1: Inter-state", 
                             "Type 2: Extra-state\ncolonial", 
