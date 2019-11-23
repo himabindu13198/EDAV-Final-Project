@@ -102,10 +102,10 @@ The dataset has 4 tables corresponding to inter-state wars, intra-state wars, no
 
 ```{r}
 # import data
-inter_state <- read.csv('Inter-StateWarData_v4.0.csv')
-intra_state <- read.csv('Intra-StateWarData_v4.1.csv')
-extra_state <- read.csv('Extra-StateWarData_v4.0.csv')
-non_state <- read.csv('Non-StateWarData_v4.0.csv')
+inter_state <- read.csv('data/raw/Inter-StateWarData_v4.0.csv')
+intra_state <- read.csv('data/raw/Intra-StateWarData_v4.1.csv')
+extra_state <- read.csv('data/raw/Extra-StateWarData_v4.0.csv')
+non_state <- read.csv('data/raw/Non-StateWarData_v4.0.csv')
 ```
 
 Intra state wars are further categorized into 3 types as follows:
