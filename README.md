@@ -4,7 +4,7 @@
 Priyanka Lahoti, Hima Bindu Bhardwaj, Jasmine Bao, Yingnan Wu
 
 ## Topic: 
-We decided to have our topic as wars in history. The war data are available at  (Links to an external site.)http://www.correlatesofwar.org/data-sets/COW-war from Correlates of War (COW) project.
+We decided to have our topic as wars in history. There are 4 data sets corresponding to inter-state wars, intra-state wars, non state wars and extra state wars. 
 
 ## Questions:
 * General visualization explorations of wars, such as:
