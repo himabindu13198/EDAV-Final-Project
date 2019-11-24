@@ -1,0 +1,176 @@
+---
+title: "EDAV_PSet5A"
+output: html_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)  
+```
+
+## R Markdown
+
+```{r cars}
+
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+library(maps)
+library(GGally)
+library(RColorBrewer)
+library(parcoords)
+
+```
+The dataset has 4 tables corresponding to inter-state wars, intra-state wars, non state wars and extra state wars. 
+Many wars transformed to other wars that took place later on. We found that 12 civil intra state wars transformed to inter state wars, 3 inter state wars transformed to extra state wars and 2 intra state wars transformed to extra state wars. We were able to find these transformed wars and store them as shown below:
+
+
+
+```{r}
+inter_state=read.csv('/home/hima/Downloads/data_raw/Inner-state Wars/Inter-StateWarData_v4.0.csv')
+intra_state=read.csv('/home/hima/Downloads/data_raw/Intra-state Wars/Intra-StateWarData_v4.1.csv')
+Extra_state=read.csv('/home/hima/Downloads/data_raw/Extra-state Wars/Extra-StateWarData_v4.0.csv')
+military_expenditure_main = read.csv('/home/hima/Downloads/military-expenditure-as-a-share-of-gdp (1).csv')
+colnames(military_expenditure_main)[4] <- "MilitaryExpenditure"
+primary_school_main = read.csv('/home/hima/Downloads/primary-enrollment-selected-countries.csv')
+colnames(primary_school_main)[4] <- "SchoolEnrolment"
+HDI_main = read.csv('/home/hima/Downloads/human-development-index-escosura.csv')
+colnames(HDI_main)[4] <- "HDI"
+```
+
+<!-- Intra state wars are further categorised into 3 types as follows: -->
+<!-- ```{r} -->
+<!-- Civil_intra_state=intra_state%>%filter(WarType==4|WarType==5) -->
+<!-- Regional_internal_intra_state=intra_state%>%filter(WarType==6) -->
+<!-- Intercommunal_intra_state=intra_state%>%filter(WarType==7) -->
+<!-- ``` -->
+
+
+World War 1
+
+```{r}
+#world_war1:: Years: 1914-1918
+world_war1=inter_state%>%filter(WarName=='World War I')
+world_war1$StateName=as.character(world_war1$StateName)
+```
+
+
+```{r}
+#maps
+world <- map_data("world")
+world_war1 <- world_war1 %>%
+  ## Recode certain entries
+  mutate(StateName = recode(str_trim(StateName), "United States of America" = "USA",
+                            "United Kingdom" = "UK"))
+```
+
+```{r}
+world_war1['start_date'] <- as.Date(with(world_war1, paste(StartYear1, StartMonth1, StartDay1,sep="-")), "%Y-%m-%d")
+world_war1['end_date'] <- as.Date(with(world_war1, paste(EndYear1, EndMonth1, EndDay1,sep="-")), "%Y-%m-%d")
+world_war1['number_of_days']=world_war1['end_date']-world_war1['start_date']
+```
+
+
+
+Military Expenditure Trends
+
+```{r}
+library(ggplot2)
+military_expenditure <- subset(military_expenditure_main, Entity %in% world_war1$StateName)
+  ggplot(military_expenditure,aes(Year, y = MilitaryExpenditure, colour = Entity, group = Entity)) +
+  geom_line() +
+  labs(title = "Trends in Military Expenditures of countries in WW1", y = "Expenditure", x = "")
+  
+  library(ggplot2)
+military_expenditure <- subset(military_expenditure_main, Entity %in% world_war1$StateName)
+military_expenditure <- subset(military_expenditure, Year >= min(world_war1$StartYear1)-10)
+military_expenditure <- subset(military_expenditure, Year <= max(world_war1$EndYear1)+10)
+ ggplot(military_expenditure,aes(Year, y = MilitaryExpenditure, colour = Entity, group = Entity)) +
+  geom_line() +
+  labs(title = "Trends in Military Expenditures of countries in WW1 \n (from before and after 10 years of WW1)", y = "Expenditure", x = "")
+
+```
+
+Primary School Enrolment Percentage Trends
+
+```{r}
+school_enrolment <- subset(primary_school_main, Entity %in% world_war1$StateName)
+school_enrolment <- subset(school_enrolment, Year >= min(world_war1$StartYear1)-10)
+school_enrolment <- subset(school_enrolment, Year <= max(world_war1$EndYear1)+10)
+ggplot(school_enrolment,aes(Year, y = SchoolEnrolment, colour = Entity, group = Entity)) +
+  geom_line() +
+  labs(title = "Trends in Primary School enrolment in countries in WW1", y = "Enrolment", x = "")
+```
+
+Human Development Index Trends
+```{r}
+HDI_table <- subset(HDI_main, Entity %in% world_war1$StateName)
+ggplot(HDI_table,aes(Year, y = HDI, colour = Entity)) +
+  geom_line() +
+  labs(title = "Trends in Human Development Index in countries in WW1", y = "HDI Value", x = "")
+
+HDI_table <- subset(HDI_table, Year >= min(world_war1$StartYear1)-10)
+HDI_table <- subset(HDI_table, Year <= max(world_war1$EndYear1)+10)
+ggplot(HDI_table,aes(Year, y = HDI, colour = Entity)) +
+  geom_line() +
+  labs(title = "Trends in Human Development Index in countries \n 5 years before and after WW1", y = "HDI Value", x = "")
+
+```
+
+World War 2
+```{r}
+#world_war2:: Years: 1939-1945
+world_war2=inter_state%>%filter(WarName=='World War II')
+world_war2$StateName=as.character(world_war2$StateName)
+#maps
+world <- map_data("world")
+world_war2 <- world_war2 %>%
+  ## Recode certain entries
+  mutate(StateName = recode(str_trim(StateName), "United States of America" = "USA",
+                            "United Kingdom" = "UK"))
+
+```
+
+Military Expenditure Trends
+
+```{r}
+library(ggplot2)
+military_expenditure <- subset(military_expenditure_main, Entity %in% world_war2$StateName)
+  ggplot(military_expenditure,aes(Year, y = MilitaryExpenditure, colour = Entity, group = Entity)) +
+  geom_line() +
+  labs(title = "Trends in Military Expenditures of countries in WW2", y = "Expenditure", x = "")
+  
+  library(ggplot2)
+military_expenditure <- subset(military_expenditure_main, Entity %in% world_war2$StateName)
+military_expenditure <- subset(military_expenditure, Year >= min(world_war2$StartYear1)-10)
+military_expenditure <- subset(military_expenditure, Year <= max(world_war2$EndYear1)+10)
+ ggplot(military_expenditure,aes(Year, y = MilitaryExpenditure, colour = Entity, group = Entity)) +
+  geom_line() +
+  labs(title = "Trends in Military Expenditures of countries in WW2 \n (from before and after 10 years of WW2)", y = "Expenditure", x = "")
+
+```
+
+Primary School Enrolment Percentage Trends
+
+```{r}
+school_enrolment <- subset(primary_school_main, Entity %in% world_war2$StateName)
+school_enrolment <- subset(school_enrolment, Year >= min(world_war2$StartYear1)-10)
+school_enrolment <- subset(school_enrolment, Year <= max(world_war2$EndYear1)+10)
+ggplot(school_enrolment,aes(Year, y = SchoolEnrolment, colour = Entity, group = Entity)) +
+  geom_line() +
+  labs(title = "Trends in Primary School enrolment in countries in WW2", y = "Enrolment", x = "")
+```
+
+Human Development Index Trends
+```{r}
+HDI_table <- subset(HDI_main, Entity %in% world_war2$StateName)
+ggplot(HDI_table,aes(Year, y = HDI, colour = Entity)) +
+  geom_line() +
+  labs(title = "Trends in Human Development Index in countries in WW2", y = "HDI Value", x = "")
+
+HDI_table <- subset(HDI_table, Year >= min(world_war2$StartYear1)-10)
+HDI_table <- subset(HDI_table, Year <= max(world_war2$EndYear1)+10)
+ggplot(HDI_table,aes(Year, y = HDI, colour = Entity)) +
+  geom_line() +
+  labs(title = "Trends in Human Development Index in countries \n 5 years before and after WW2", y = "HDI Value", x = "")
+
+```
+
