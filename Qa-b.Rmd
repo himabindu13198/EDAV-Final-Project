@@ -354,48 +354,142 @@ dfa4_extra <- dfa2_extra %>%
 
 
 #### a.4 which war type caused the most number of deaths
+#### a.5 what wars caused the most number of deaths
 
 ```{r warning=FALSE}
-dfa4 <- rbind(dfa4_non, dfa4_extra, dfa4_inter, dfa4_extra) %>%
-  mutate(BattleDeath = ifelse(BatDeath == "-9", NA, as.numeric(BatDeath)))
+dfa4 <- rbind(dfa4_extra, dfa4_inter, dfa4_intra, dfa4_non) %>%
+  mutate(BatDeath2 = as.numeric(sub(",", "", BatDeath, fixed = TRUE))) %>%
+  mutate(BatDeath3 = ifelse(BatDeath2 == -9, NA, BatDeath2)) %>%
+  filter(BatDeath3 != 0) %>% # remove NA and 0 number of deaths
+  group_by(WarType) %>%
+  summarise(WarDeath=sum(BatDeath3))
+```
+
+
+```{r}
+ggplot(dfa4, aes(factor(x=WarType), y=WarDeath)) + 
+  geom_bar(color = "grey50", fill = "lightblue", stat = "identity") + 
+  xlab("War Type") +
+  ggtitle("Figure #: Bar chart") + 
+  theme(plot.title = element_text(hjust = 0.5, size=10))
+
+plot_ly(dfa4, x = ~WarType, y = ~WarDeath, type = "bar") %>%
+  layout(yaxis = list(title = 'Number of deaths'), 
+         title = 'Figure #: Interactive stacked bar chart')
 ```
 
 
 
 ```{r}
-
+dfa5 <- rbind(dfa4_extra, dfa4_inter, dfa4_intra, dfa4_non) %>%
+  mutate(BatDeath2 = as.numeric(sub(",", "", BatDeath, fixed = TRUE))) %>%
+  mutate(BatDeath3 = ifelse(BatDeath2 == -9, NA, BatDeath2)) %>%
+  filter(BatDeath3 != 0) %>% # remove NA and 0 number of deaths
+  group_by(WarType, WarName) %>%
+  summarise(SumDeath=sum(BatDeath3))
 ```
 
 
+```{r}
+dfa5.1 <- within(dfa5, SumDeathOrd <- reorder(WarType, -SumDeath, median))
 
-#### a.5 what wars caused the most number of deaths
+ggplot(dfa5.1, aes(SumDeathOrd, SumDeath)) +
+  geom_boxplot() +
+  ylab("Total number of deaths") +
+  xlab("War Type") +
+  ggtitle("Figure #: boxplot of total number of deaths grouped by War Type") +
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  coord_cartesian(ylim = c(0, 50000))
+```
+
+
+```{r}
+numWarType7 <- nrow(dfa5.1[dfa5.1$WarType == 7, ])
+numWarType7
+```
+
+
+```{r}
+dfa5.2 <- within(dfa5, SumDeathOrd <- reorder(WarType, -SumDeath, median)) %>%
+  filter(WarType != 7)
+
+ggplot(dfa5.2, aes(SumDeathOrd, SumDeath)) +
+  geom_boxplot() +
+  ylab("Total number of deaths") +
+  xlab("War Type") +
+  ggtitle("Figure #: boxplot of total number of deaths grouped by War Type") +
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  coord_cartesian(ylim = c(0, 50000))
+```
+
+
+```{r fig.height=5, fig.width=6}
+dfa5.4 <- dfa5 %>%
+  filter(SumDeath != 0)
+
+dfa5.4 <- dfa5.4[order(-dfa5.4$SumDeath), ][1:40, ]
+
+ggplot(dfa5.4, aes(x = SumDeath/1000, y = fct_reorder(WarName, SumDeath))) +
+  geom_point(color = "blue", size = 1) + 
+  xlab("Number of Battle Deaths (in thousands)") +
+  ylab("War Name") +
+  ggtitle("Figure #: Number of Battle Deaths for Each War") +
+  scale_x_continuous(breaks = seq(0,18000,1500)) + 
+  theme_dotplot +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+
+```{r fig.height=5, fig.width=6}
+ggplot(dfa5.4, aes(x = SumDeath/1000, y = fct_reorder(WarName, SumDeath))) +
+  geom_point(color = "blue", size = 1) + 
+  xlab("Number of Battle Deaths (in thousands)") +
+  ylab("War Name") +
+  ggtitle("Figure #: Number of Battle Deaths for Each War") +
+  coord_cartesian(xlim = c(0, 1500)) + 
+  scale_x_continuous(breaks = seq(0,1500,100)) + 
+  theme_dotplot +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
+  
+```
+
+
 
 
 #### a.8 what countries had most losses of human lives due to the war 
 Non-state: these wars are not about countries or states, and thus we don't take them into consideration.
 
+```{r warning=FALSE}
+dfa8 <- rbind(dfa2_inter, dfa2_intra, dfa2_extra) %>%
+  mutate(BatDeath2 = as.numeric(sub(",", "", BatDeath, fixed = TRUE))) %>%
+  mutate(BatDeath3 = ifelse(BatDeath2 == -9, NA, BatDeath2)) %>%
+  group_by(StateName) %>%
+  summarise(CountryBatDeath=sum(BatDeath3, na.rm = TRUE))
+```
+
 
 Cleveland plot (country with 0 deaths removed)
 
-```{r fig.height=8, fig.width=6}
+```{r fig.height=6, fig.width=6}
 dfa8.1 <- dfa8 %>%
   filter(CountryBatDeath != 0)
 
-dfa8.1 <- dfa8.1[order(-dfa8.1$CountryBatDeath), ][1:100, ]
+dfa8.1 <- dfa8.1[order(-dfa8.1$CountryBatDeath), ][1:60, ]
 
 ggplot(dfa8.1, aes(x = CountryBatDeath/1000, y = fct_reorder(StateName, CountryBatDeath))) +
   geom_point(color = "blue", size = 1) + 
   xlab("Number of Battle Deaths (in thousands)") +
   ylab("State Name") +
   ggtitle("Figure #: Number of Battle Deaths for Each State") +
-  scale_x_continuous(breaks = seq(0,9000,500)) + 
+  scale_x_continuous(breaks = seq(0,9000,1000)) + 
   theme_dotplot
 ```
 
 #### a.9 are number of wars correlated with number of battle deaths for countries?
 
 ```{r}
-dfa9 <- merge(dfa2, dfa8, by="StateName")
+dfa9 <- merge(dfa2, dfa8, by="StateName") %>%
+  filter(CountryBatDeath != 0)
 ```
 
 
@@ -433,7 +527,7 @@ theme_heatmap <- theme_bw(15) +
 
 ggplot(dfa9, aes(y=CountryBatDeath, x=Count)) +
   ggtitle("Figure #: Hexagonal heatmap of bin counts") + 
-  geom_hex(binwidth=c(5,400000), alpha = 0.9) + 
+  geom_hex(binwidth=c(2.5,400000), alpha = 0.9) + 
   scale_fill_gradient(low = "#cccccc", high = "#09005F", trans = "log10") + 
   theme_heatmap 
 ```
@@ -442,7 +536,27 @@ ggplot(dfa9, aes(y=CountryBatDeath, x=Count)) +
 #### a.3 which country initiated inter-state wars most frequently
 
 
+
+
 #### a.7 is there a pattern between initiators and winners of inter-state wars
+
+Outcome: coded as:
+1 = Winner
+2 = Loser
+3 = Compromise/Tied
+4 = The war was transformed into another type of war
+5 = The war is ongoing as of 12/31/2007
+6 = Stalemate
+7 = Conflict continues at below war level
+8 = changed sides
+
+Initiator - whether the state initiated the war
+1 = Yes
+2 = No
+```{r}
+unique(inter_state$Outcome)
+```
+
 
 
 #### a.6 is the number of deaths correlated to whether the country is an initiator of an inter-state war or not
