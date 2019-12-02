@@ -17,6 +17,7 @@ if(!require("RColorBrewer")) { install.packages("RColorBrewer"); library("RColor
 if(!require("parcoords")) { install.packages("parcoords"); library("parcoords")}
 if(!require("gridExtra")) { install.packages("gridExtra"); library("gridExtra")}
 if(!require("cowplot")) { install.packages("cowplot"); library("cowplot")}
+if(!require("plotly")) { install.packages("plotly"); library("plotly")}
 ```
 
 
