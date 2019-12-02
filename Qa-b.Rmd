@@ -18,6 +18,8 @@ if(!require("parcoords")) { install.packages("parcoords"); library("parcoords")}
 if(!require("gridExtra")) { install.packages("gridExtra"); library("gridExtra")}
 if(!require("cowplot")) { install.packages("cowplot"); library("cowplot")}
 if(!require("plotly")) { install.packages("plotly"); library("plotly")}
+if(!require("vcd")) { install.packages("vcd"); library("vcd")}
+if(!require("ggmosaic")) { install.packages("ggmosaic"); library("ggmosaic")}
 ```
 
 
@@ -497,8 +499,6 @@ dfa9 <- merge(dfa2, dfa8, by="StateName") %>%
 Interactive scatter plot
 
 ```{r warning=FALSE}
-if(!require("plotly")) { install.packages("plotly"); library("plotly")}
-
 sp <- ggplot(dfa9, aes(y=CountryBatDeath/100000, x=Count)) + 
   geom_point(aes(text=StateName), color = "blue") +
   xlab("Number of wars") +
@@ -534,11 +534,6 @@ ggplot(dfa9, aes(y=CountryBatDeath, x=Count)) +
 ```
 
 
-#### a.3 which country initiated inter-state wars most frequently
-
-
-
-
 #### a.7 is there a pattern between initiators and winners of inter-state wars
 
 Outcome: coded as:
@@ -546,24 +541,91 @@ Outcome: coded as:
 2 = Loser
 3 = Compromise/Tied
 4 = The war was transformed into another type of war
-5 = The war is ongoing as of 12/31/2007
+
+(5 = The war is ongoing as of 12/31/2007)
+
 6 = Stalemate
-7 = Conflict continues at below war level
+
+(7 = Conflict continues at below war level)
+
 8 = changed sides
+
+```{r}
+unique(inter_state$Outcome)
+```
 
 Initiator - whether the state initiated the war
 1 = Yes
 2 = No
+
+
 ```{r}
-unique(inter_state$Outcome)
+dfa7 <- inter_state %>% select(WarNum, WarName, WarType, ccode, StateName, Side, Initiator, Outcome, BatDeath) %>%
+  mutate(Initiator = as.factor(Initiator), Outcome = as.factor(Outcome), BatDeath = as.numeric(BatDeath))
+```
+
+Mosaic plot
+
+```{r}
+vcd::mosaic(Initiator ~ Outcome, 
+            data = dfa7,
+            main = "Figure #: Mosaic plot between Outcome versus Initiator")
+```
+
+
+
+#### a.3 which country initiated inter-state wars most frequently? Are these the same countries that participated in most inter-wars?
+
+Scatter plot (interactive)
+
+```{r}
+dfa3.1 <- dfa7 %>% 
+  group_by(StateName) %>%
+  filter(Initiator == 1) %>%
+  summarise(NumInit = n())
+
+dfa3.2 <- dfa7 %>%
+  group_by(StateName) %>%
+  summarise(NumPart = n())
+
+dfa3 <- merge(dfa3.1, dfa3.2, by = "StateName", all = TRUE)
+```
+
+
+```{r warning=FALSE}
+sp2 <- ggplot(dfa3, aes(y=NumPart, x=NumInit)) + 
+  geom_point(aes(text=StateName), color = "blue") +
+  xlab("Number of initiating wars") +
+  ylab("Number of wars") + 
+  ggtitle("Figure #: Number of initiating wars versus Number of wars") + 
+  theme(plot.title = element_text(hjust = 0.5, size=12))
+
+ggplotly(sp2, tooltip = c("text"))
 ```
 
 
 
 #### a.6 is the number of deaths correlated to whether the country is an initiator of an inter-state war or not
 
+3+6+7 together: parcoords()
+For each war
+1. StartYear1
+2. Initiator
+3. Outcome
+4. BatDeath
 
+```{r}
+dfa6 <- inter_state %>% select(StartYear1, Initiator, Outcome, BatDeath)
 
+parcoords(dfa6, 
+          rownames=FALSE,
+          brushMode="1D-axes",
+          reorderable=TRUE,
+          queue=TRUE,
+          alphaOnBrushed=0.5,
+          color=list(colorBy="Initiator"),
+          withD3=TRUE)
+```
 
 
 
